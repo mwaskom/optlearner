@@ -124,7 +124,7 @@ class OptimalLearner(object):
         f = plt.figure(**kwargs)
         p_ax = f.add_subplot(211, ylim=(-0.1, 1.1))
         p_ax.plot(self.p_hats, c=blue)
-        p_ax.plot(self.data, marker="o", c=red, ls="none", ms=4)
+        p_ax.plot(self.data, marker="o", c="#444444", ls="none", ms=4)
         if ground_truth is not None:
             p_ax.plot(ground_truth, c="dimgray", ls="--")
         p_ax.set_ylabel("$p$", size=16)

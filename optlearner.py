@@ -74,16 +74,28 @@ class OptimalLearner(object):
 
         self.pIk = pIk / pIk.sum()
 
+    @property
+    def p_hats(self):
+        return np.atleast_1d(self._p_hats)
+
+    @property
+    def v_hats(self):
+        return np.atleast_1d(self._v_hats)
+
+    @property
+    def data(self):
+        return np.atleast_1d(self._data)
+
     def fit(self, data):
         """Fit the model to a sequence of Bernoulli observations."""
         for y in data:
             self._update(y)
             pI = self.pIk.sum(axis=2)
             self.p_dists.append(pI.sum(axis=1))
-            self.p_hats.append(np.sum(self.p_dists[-1] * self.p_grid))
             self.v_dists.append(pI.sum(axis=0))
-            self.v_hats.append(1 / np.sum(self.v_dists[-1] * self.I_grid))
-            self.data.append(y)
+            self._p_hats.append(np.sum(self.p_dists[-1] * self.p_grid))
+            self._v_hats.append(1 / np.sum(self.v_dists[-1] * self.I_grid))
+            self._data.append(y)
 
     def reset(self):
         """Reset the history of the learner."""
@@ -93,10 +105,10 @@ class OptimalLearner(object):
 
         # Initialize the memory lists
         self.p_dists = []
-        self.p_hats = []
         self.v_dists = []
-        self.v_hats = []
-        self.data = []
+        self._p_hats = []
+        self._v_hats = []
+        self._data = []
 
     def plot_history(self, ground_truth=None):
         """Plot the data and posterior means from the history."""

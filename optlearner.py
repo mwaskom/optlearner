@@ -110,7 +110,7 @@ class OptimalLearner(object):
         self._v_hats = []
         self._data = []
 
-    def plot_history(self, ground_truth=None, **kwargs):
+    def plot_history(self, ground_truth=None, shifts=None, **kwargs):
         """Plot the data and posterior means from the history."""
         try:
             import seaborn as sns
@@ -124,14 +124,19 @@ class OptimalLearner(object):
         f = plt.figure(**kwargs)
         p_ax = f.add_subplot(211, ylim=(-0.1, 1.1))
         p_ax.plot(self.p_hats, c=blue)
-        p_ax.plot(self.data, marker="o", c="#444444", ls="none", ms=4)
+        p_ax.plot(self.data, marker="o", c="#444444", ls="", alpha=.5, ms=4)
         if ground_truth is not None:
             p_ax.plot(ground_truth, c="dimgray", ls="--")
         p_ax.set_ylabel("$p$", size=16)
-        
-        v_ax = f.add_subplot(212, ylim=(.1, .4))
+        p_ax.set_xticklabels([])
+
+        v_ax = f.add_subplot(212, ylim=(.1, .4), sharex=p_ax)
         v_ax.plot(self.v_hats, c=green)
-        v_ax.set_ylabel("$v$", size=16);
+        if shifts is not None:
+            for trial in shifts:
+                v_ax.axvline(trial, c="dimgray", ls=":")
+        v_ax.set_ylabel("$v$", size=16)
+        f.tight_layout()
 
     def plot_joint(self, cmap="BuGn"):
         """Plot the current joint distribution P(p, v | y_<=i)."""
@@ -149,17 +154,17 @@ class OptimalLearner(object):
 
         fig = plt.figure(figsize=(7, 7))
         gs = plt.GridSpec(3, 3)
-        
+
         ax1 = fig.add_subplot(gs[1:, :-1])
         ax1.contourf(self.p_grid, self.v_grid, pI.T, 30, cmap=cmap)
-        
+
         sns.axlabel("$p$", "$v$", size=16)
-        
+
         ax2 = fig.add_subplot(gs[1:, -1], axis_bgcolor=bg)
         ax2.plot(pI.sum(axis=0), self.v_grid, c=lc, lw=3)
         ax2.set_xticks([])
         ax2.set_yticks([])
-        
+
         ax3 = fig.add_subplot(gs[0, :2], axis_bgcolor=bg)
         ax3.plot(self.p_grid, pI.sum(axis=1), c=lc, lw=3)
         ax3.set_xticks([])

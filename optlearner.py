@@ -52,7 +52,7 @@ class OptimalLearner(object):
 
         pIk = self.pIk
 
-        # Multiply P(p_i, I_i, k) by P(I_i+1 | I_i, k) and
+        # Multiply P(I_i+1 | I_i, k) by P(p_i, I_i, k) and
         # integrate out I_i, which gives P(p_i, I_i+1, k)
         I_leaked = np.einsum("jkl,ikl->ijl", self._I_trans, pIk)
 

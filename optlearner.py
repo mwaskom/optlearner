@@ -8,19 +8,19 @@ Tim Behrens.
 """
 from __future__ import division
 import numpy as np
-from numpy import log, exp
+from numpy import log, exp, power, pi
 from scipy.special import gammaln
 import matplotlib.pyplot as plt
 
 
 class OptimalLearner(object):
 
-    def __init__(self):
+    def __init__(self, p_step=.02, I_step=.2, k_step=.2):
 
         # Set up the parameter grids
-        self.p_grid = make_grid(.01, .99, .02)
-        self.I_grid = make_grid(log(2), log(10000), .2)
-        self.k_grid = make_grid(log(5e-4), log(20), .2)
+        self.p_grid = make_grid(.01, .99, p_step)
+        self.I_grid = make_grid(log(2), log(10000), I_step)
+        self.k_grid = make_grid(log(5e-4), log(20), k_step)
         self.v_grid = 1 / self.I_grid
 
         self._p_size = self.p_grid.size
@@ -56,9 +56,9 @@ class OptimalLearner(object):
         # integrate out I_i, which gives P(p_i, I_i+1, k)
         I_leaked = np.einsum("jkl,ikl->ijl", self._I_trans, pIk)
 
-        # Multiply P(p_i, I_i+1, k) by P(p_p+1 | p_i, I_i+1) and
+        # Multiply P(p_p+1 | p_i, I_i+1) by P(p_i, I_i+1, k) and
         # integrate out p_i, which gives P(p_i+1, I_i+1, k)
-        p_leaked = np.einsum("jkl,ijk->ikl", I_leaked, self._p_trans)
+        p_leaked = np.einsum("ijk,jkl->ikl", self._p_trans, I_leaked)
 
         # Set the running joint distribution to the new values
         pIk = p_leaked
@@ -83,6 +83,10 @@ class OptimalLearner(object):
         return np.atleast_1d(self._v_hats)
 
     @property
+    def k_hats(self):
+        return np.atleast_1d(self._k_hats)
+
+    @property
     def data(self):
         return np.atleast_1d(self._data)
 
@@ -93,8 +97,10 @@ class OptimalLearner(object):
             pI = self.pIk.sum(axis=2)
             self.p_dists.append(pI.sum(axis=1))
             self.v_dists.append(pI.sum(axis=0))
+            self.k_dists.append(self.pIk.sum(axis=(0, 1)))
             self._p_hats.append(np.sum(self.p_dists[-1] * self.p_grid))
             self._v_hats.append(1 / np.sum(self.v_dists[-1] * self.I_grid))
+            self._k_hats.append(np.sum(self.k_dists[-1] * self.k_grid))
             self._data.append(y)
 
     def reset(self):
@@ -106,8 +112,10 @@ class OptimalLearner(object):
         # Initialize the memory lists
         self.p_dists = []
         self.v_dists = []
+        self.k_dists = []
         self._p_hats = []
         self._v_hats = []
+        self._k_hats = []
         self._data = []
 
     def plot_history(self, ground_truth=None, shifts=None, **kwargs):
@@ -122,20 +130,27 @@ class OptimalLearner(object):
         red, green, blue = palette
 
         f = plt.figure(**kwargs)
-        p_ax = f.add_subplot(211, ylim=(-0.1, 1.1))
+        p_ax = f.add_subplot(311, ylim=(-0.1, 1.1))
         p_ax.plot(self.p_hats, c=blue)
         p_ax.plot(self.data, marker="o", c="#444444", ls="", alpha=.5, ms=4)
         if ground_truth is not None:
             p_ax.plot(ground_truth, c="dimgray", ls="--")
-        p_ax.set_ylabel("$p$", size=16)
+        p_ax.set_ylabel("$\hat p$", size=16)
         p_ax.set_xticklabels([])
 
-        v_ax = f.add_subplot(212, ylim=(.1, .4), sharex=p_ax)
+        v_ax = f.add_subplot(312, ylim=(.1, .4), sharex=p_ax)
         v_ax.plot(self.v_hats, c=green)
         if shifts is not None:
             for trial in shifts:
                 v_ax.axvline(trial, c="dimgray", ls=":")
-        v_ax.set_ylabel("$v$", size=16)
+        v_ax.set_ylabel("$\hat v$", size=16)
+
+        k_ax = f.add_subplot(313, ylim=(-8, 3), sharex=p_ax)
+        k_ax.plot(self.k_hats, c=red)
+        if shifts is not None:
+            for trial in shifts:
+                k_ax.axvline(trial, c="dimgray", ls=":")
+        k_ax.set_ylabel("$\hat k$", size=16)
         f.tight_layout()
 
     def plot_joint(self, cmap="BuGn"):
@@ -180,8 +195,8 @@ def make_grid(start, stop, step):
 def I_trans_func(I_p1, I, k):
     """I_p1 is normal with mean I and std dev k."""
     var = exp(k * 2)
-    pdf = exp(-np.power(I_p1 - I, 2)) / (2 * var)
-    pdf /= np.sqrt(2 * np.pi * var)
+    pdf = exp(-.5 * power(I - I_p1, 2) / var)
+    pdf *= power(2 * pi * var, -0.5)
     return pdf
 
 

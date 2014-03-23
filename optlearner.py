@@ -175,12 +175,12 @@ class OptimalLearner(object):
 
         sns.axlabel("$p$", "$v$", size=16)
 
-        ax2 = fig.add_subplot(gs[1:, -1], axis_bgcolor=bg)
+        ax2 = fig.add_subplot(gs[1:, -1], axis_bgcolor=bg, sharey=ax1)
         ax2.plot(pI.sum(axis=0), self.v_grid, c=lc, lw=3)
         ax2.set_xticks([])
         ax2.set_yticks([])
 
-        ax3 = fig.add_subplot(gs[0, :2], axis_bgcolor=bg)
+        ax3 = fig.add_subplot(gs[0, :2], axis_bgcolor=bg, sharex=ax1)
         ax3.plot(self.p_grid, pI.sum(axis=1), c=lc, lw=3)
         ax3.set_xticks([])
         ax3.set_yticks([])

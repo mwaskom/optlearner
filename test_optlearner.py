@@ -6,7 +6,7 @@ import optlearner
 
 def test_update():
     """Test the fast upate code against a for loop."""
-    learner = optlearner.OptimalLearner()
+    learner = optlearner.VolatilityLearner()
 
     for reward in [0, 1]:
         slow_pIk = slow_update(learner, reward)

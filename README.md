@@ -5,6 +5,6 @@ This repository has code for two Bayesian models that learn latent binomial prob
 
 You can view the example notebooks for the the two learners statically:
 
-- [Volatility learner](http://nbviewer.ipython.org/urls/raw.github.com/mwaskom/OptimalLearner/master/VolatilityLearner.ipynb).
-- [Probability learner](http://nbviewer.ipython.org/urls/raw.github.com/mwaskom/OptimalLearner/master/ProbabilityLearner.ipynb).
+- [Volatility learner](http://nbviewer.ipython.org/urls/raw.github.com/mwaskom/optlearner/master/VolatilityLearner.ipynb).
+- [Probability learner](http://nbviewer.ipython.org/urls/raw.github.com/mwaskom/optlearner/master/ProbabilityLearner.ipynb).
 
